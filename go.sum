@@ -1,0 +1,6 @@
+github.com/cpmech/gosl v1.2.9 h1:A8DOb953we5F0T+0VTcQkAHt2iFCRW9oa1flGRyF5ao=
+github.com/cpmech/gosl v1.2.9/go.mod h1:bfHlja8HSBeS5I5WFJqW+mt3Y2QWqTSPMY5+wprYQGQ=
+github.com/keegancsmith/nth v0.0.0-20160926112203-ee21de2f07b8 h1:QCdRsV8WNLoLAUwAm6G4FZF3OpCkRtU0QDjGkp5/1r4=
+github.com/keegancsmith/nth v0.0.0-20160926112203-ee21de2f07b8/go.mod h1:GGie0rcBbRSciSNcfYjdzMR0jL66DbnsHDOhwIJ4L7g=
+github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12 h1:dd7vnTDfjtwCETZDrRe+GPYNLA1jBtbZeyfyE8eZCyk=
+github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12/go.mod h1:i/KKcxEWEO8Yyl11DYafRPKOPVYTrhxiTRigjtEEXZU=
