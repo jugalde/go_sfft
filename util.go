@@ -159,6 +159,8 @@ func binomialCdf(prob float64, n, needed int) float64 {
 		ans += choose * math.Pow(prob, (float64)(i)) * math.Pow((float64)(1-prob), (float64)(n-i))
 		choose = choose * (float64)(i) / (float64)(n-i+1)
 	}
+	fmt.Printf("BINOMIAL %+v:%+v:%+v:%+v\n", prob, n, needed, ans)
+
 	return ans
 }
 
@@ -211,7 +213,6 @@ func fftwDft(out []complex128, backwards bool) {
 func nthElementImmutable(input []float64, n, num int) float64 {
 	x := make([]float64, n)
 	copy(x, input)
-	//nth.Element(floats(x), num)
 	sort.Float64s(x)
 	return x[num]
 }

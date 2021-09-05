@@ -6,9 +6,9 @@ import (
 	"math"
 	"math/cmplx"
 	"math/rand"
+	"sort"
 
 	"github.com/cpmech/gosl/fun/fftw"
-	"github.com/keegancsmith/nth"
 )
 
 // TIMING ...
@@ -120,6 +120,7 @@ func runExperiment(x []complex128, n int,
 			fmt.Printf("Error on outerLoop: %+v\n", err)
 			return
 		}
+		fmt.Printf("????ANS %+v:%+v\n\n", ans, repetitions)
 	}
 
 	numCandidates := len(ans)
@@ -139,7 +140,9 @@ func runExperiment(x []complex128, n int,
 		xFLarge[largeFreq[i]] = xF[largeFreq[i]]
 	}
 
-	nth.Element(listOfFloats(candidates[0:numCandidates]), numCandidates-k)
+	//nth.Element(listOfFloats(candidates[0:numCandidates]), numCandidates-k)
+	sort.Sort(listOfFloats(candidates[0:numCandidates]))
+	fmt.Printf("??? %+v\n", candidates)
 	for i := 0; i < k; i++ {
 		key := candidates[numCandidates-k+i][1]
 		ansLarge[(int)(key)] = ans[(int)(key)]
@@ -198,8 +201,9 @@ func evaluateRuntime(n int, lobefrac, tolerance,
 	num, B, B2, locationLoops,
 	estLoops, loopThreshold, wComb,
 	combLoops int) float64 {
-	w := int((float64)(1/math.Pi) * (float64)(1/lobefrac) * math.Acosh((float64)(1./tolerance)))
-	w2 := int((float64)(1/math.Pi) * (float64)(1/lobefrac2) * math.Acosh((float64)(1./tolerance2)))
+	w := int((float64)(1/math.Pi) * (float64)(1) / (float64)(lobefrac) * math.Acosh((float64)(1.)/(float64)(tolerance)))
+	w2 := int((float64)(1/math.Pi) * (float64)(1) / (float64)(lobefrac2) * math.Acosh((float64)(1.)/(float64)(tolerance2)))
+	fmt.Printf("W ARE %+v:%+v\n", w, w2)
 
 	if WITHCOMB {
 		if num >= wComb {
@@ -225,12 +229,13 @@ func evaluateRuntime(n int, lobefrac, tolerance,
 	}
 	var projectedHits float64 = (float64)(n * mFrac)
 	if ALGORITHM1 {
-		projectedHits = binomialCdf((float64)(num*(1./B-1./n)), locationLoops, loopThreshold) * (float64)(n*mFrac+num/2)
+		projectedHits = binomialCdf((float64)(num)*((float64)(1.)/(float64)(B)-(float64)(1.)/(float64)(n)), locationLoops, loopThreshold)*(float64)(n)*(float64)(mFrac) + (float64)(num)/(float64)(2)
 	}
 	//XXX B2 for some, B for some
-	var kEst float64 = (float64)(num / 2)
-	projectedNoiseOnK := (float64)(2) * binomialCdf(kEst*(float64)((1./B2-1./n)/2), loops, (loops+1)/2) * kEst
-	projectedErrorRate := (float64)(2)*binomialCdf(kEst*(float64)((1./B2-1./n)/4), loops, (loops+1)/2)*(float64)(n*mFrac) + projectedNoiseOnK
+	var kEst float64 = (float64)(num) / (float64)(2)
+
+	projectedNoiseOnK := (float64)(2) * binomialCdf(kEst*((float64)(1.)/(float64)(B2)-(float64)(1.)/(float64)(n))/(float64)(2), loops, (loops+1)/2) * kEst
+	projectedErrorRate := (float64)(2)*binomialCdf(kEst*((float64)(1.)/(float64)(B2)-(float64)(1.)/(float64)(n))/(float64)(4), loops, (loops+1)/2)*(float64)(n*mFrac) + projectedNoiseOnK
 	//double projected_error_rate = binomial_cdf((num/2) * (1. / B2 - 1./n), est_loops, (est_loops+1)/2) * (projected_hits - num/2);
 	fmt.Printf("Projected error rate: %+v (%+v per large frequency)\n", projectedErrorRate, projectedNoiseOnK)
 
@@ -274,57 +279,68 @@ func evaluateRuntime(n int, lobefrac, tolerance,
 
 func main() {
 	nPtr := flag.Int("N", 4*128*8192, "N")
-	n := *nPtr
 	kPtr := flag.Int("K", 100, "K")
-	k := *kPtr
 	repetitionsPtr := flag.Int("R", 1, "repetitions")
-	repetitions := *repetitionsPtr
+
 	BcstLocPtr := flag.Float64("B", 2., "BcstLoc")
-	BcstLoc := *BcstLocPtr
 	BcstEstPtr := flag.Float64("E", 0.2, "BcstEst")
 	BcstEst := *BcstEstPtr
 	combCstPtr := flag.Float64("M", 16., "combCst")
+
+	locLoopsPtr := flag.Int("l", 3, "locLoops")
+
+	estLoopsPtr := flag.Int("L", 12, "estLoops")
+	thresholdLoopsPtr := flag.Int("r", 2, "thresholdLoops")
+	combLoopsPtr := flag.Int("m", 1, "combLoops")
+	snrPtr := flag.Float64("S", 1000000000, "snr")
+	algPtr := flag.Bool("A", false, "NotAlgortihm1")
+
+	optPtr := flag.Bool("O", false, "fftwOpt")
+
+	vPtr := flag.Bool("v", false, "verbose")
+
+	FFTWOPT := false
+	toleranceLocPtr := flag.Float64("t", 1.e-6, "toleranceLoc")
+	toleranceEstPtr := flag.Float64("e", 1.e-8, "toleranceEst")
+	simulatePtr := flag.Bool("s", false, "simulate")
+
+	// Parse Flags
+	flag.Parse()
+
+	n := *nPtr
+	k := *kPtr
+	repetitions := *repetitionsPtr
+	BcstLoc := *BcstLocPtr
+
 	combCst := *combCstPtr
 	if combCst > 0 {
 		WITHCOMB = true
 	}
 
-	locLoopsPtr := flag.Int("l", 3, "locLoops")
 	locLoops := *locLoopsPtr
 	if locLoops == 0 {
 		ALGORITHM1 = false
 	}
-	estLoopsPtr := flag.Int("L", 12, "estLoops")
+
 	estLoops := *estLoopsPtr
-	thresholdLoopsPtr := flag.Int("r", 2, "thresholdLoops")
 	thresholdLoops := *thresholdLoopsPtr
-	combLoopsPtr := flag.Int("m", 1, "combLoops")
 	combLoops := *combLoopsPtr
-	snrPtr := flag.Float64("S", 1000000000, "snr")
 	snr := *snrPtr
 	stdNoise := math.Sqrt((float64)(k) / (2. * snr))
-	algPtr := flag.Bool("A", false, "NotAlgortihm1")
 	if *algPtr {
 		ALGORITHM1 = false
 		locLoops = 0
 	}
-	optPtr := flag.Bool("O", false, "fftwOpt")
 	if *optPtr {
 		FFTWOPT = true
 	}
 
-	vPtr := flag.Bool("v", false, "verbose")
 	if *vPtr {
 		VERBOSE = true
 	}
-
-	FFTWOPT := false
-	toleranceLocPtr := flag.Float64("t", 1.e-6, "toleranceLoc")
 	toleranceLoc := *toleranceLocPtr
 
-	toleranceEstPtr := flag.Float64("e", 1.e-8, "toleranceEst")
 	toleranceEst := *toleranceEstPtr
-	simulatePtr := flag.Bool("s", false, "simulate")
 	simulate := *simulatePtr
 
 	n = floorToPow2((float64)(n))

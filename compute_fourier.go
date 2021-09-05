@@ -7,8 +7,6 @@ import (
 	"math/rand"
 	"sort"
 	"time"
-
-	"github.com/keegancsmith/nth"
 )
 
 // CombFilter ...
@@ -95,12 +93,14 @@ func innerLoopFilterRegular(J []int, n, num, B, a, ai, b, loopThreshold int,
 	// Given the set of large samples, find the locations in [n] that map there
 	// and output them
 
+	fmt.Printf("HIT ME????\n")
 	for i := 0; i < num; i++ {
 		low := ((int)(math.Ceil((float64)(J[i])-(float64)(0.5)*(float64)(n)/(float64)(B))) + n) % n
 		high := ((int)(math.Ceil((float64)(J[i])+(float64)(0.5)*(float64)(n)/(float64)(B))) + n) % n
 		loc := timesmod(low, a, n)
 		for j := low; j != high; j = (j + 1) % n {
 			score[loc]++
+			fmt.Printf("LOC VS THRESH %+v:%+v\n\n", score[loc], loopThreshold)
 			if score[loc] == loopThreshold {
 				hitsFound++
 				hits[hitsFound] = loc
@@ -214,6 +214,7 @@ func estimateValues(hits []int, hitsFound int,
 	for a := 0; a < 2; a++ {
 		values[a] = make([]float64, loops)
 	}
+	fmt.Printf("?NAY HITS %+v\n", hitsFound)
 
 	for i := 0; i < hitsFound; i++ {
 		position := 0
@@ -246,7 +247,8 @@ func estimateValues(hits []int, hitsFound int,
 		location := (loops - 1) / 2
 
 		for a := 0; a < 2; a++ {
-			nth.Element(floats(values[a][position:]), location)
+			//nth.Element(floats(values[a][position:]), location)
+			sort.Float64s(values[a][position:])
 		}
 		realv := values[0][location]
 		imagv := values[1][location]
