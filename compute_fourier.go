@@ -54,14 +54,14 @@ func innerLoopLocate(origx []complex128, n int, filter *Filter, num, B, a, ai, b
 
 	if TIMING {
 		pfT = time.Now().UnixNano() - DDD
-		fmt.Printf("Step 1.A (PERM + FILTER);---------------%+v", pfT)
+		fmt.Printf("Step 1.A (PERM + FILTER);---------------%+v\n\n", pfT)
 		DDD = time.Now().UnixNano()
 	}
 
 	fftwDft(xSampt, false)
 
 	if TIMING {
-		fmt.Printf("Step 1.B (FFTW);---------------%+v", time.Now().UnixNano()-DDD)
+		fmt.Printf("Step 1.B (FFTW);---------------%+v\n\n", time.Now().UnixNano()-DDD)
 		DDD = time.Now().UnixNano()
 	}
 
@@ -76,7 +76,7 @@ func innerLoopLocate(origx []complex128, n int, filter *Filter, num, B, a, ai, b
 
 	if TIMING {
 		bcT = time.Now().UnixNano() - DDD
-		fmt.Printf("Step 1.C (LARGEST BUCKS);---------------%+v", bcT)
+		fmt.Printf("Step 1.C (LARGEST BUCKS);---------------%+v\n\n", bcT)
 		DDD = time.Now().UnixNano()
 	}
 	return nil

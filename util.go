@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/cpmech/gosl/fun/fftw"
-	"github.com/keegancsmith/nth"
 )
 
 type listOfFloats [][]float64
@@ -212,12 +211,12 @@ func fftwDft(out []complex128, backwards bool) {
 func nthElementImmutable(input []float64, n, num int) float64 {
 	x := make([]float64, n)
 	copy(x, input)
-	nth.Element(floats(x), n)
+	//nth.Element(floats(x), num)
+	sort.Float64s(x)
 	return x[num]
 }
 
 func findLargestIndices(output []int, num int, samples []float64, n int) error {
-	fmt.Printf("%+v : %+v : %+v : %+v \n\nHMMMMM\n\n\n\n", len(output), num, len(samples), n)
 	if n < num+1 {
 		return fmt.Errorf("n must be greater than num")
 	}
@@ -226,7 +225,7 @@ func findLargestIndices(output []int, num int, samples []float64, n int) error {
 	count := 0
 
 	for i := 0; i < n; i++ {
-		if samples[i] >= cutoff {
+		if samples[i] < cutoff {
 			output[count] = i
 			count++
 		}
