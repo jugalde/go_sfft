@@ -7,6 +7,7 @@ import (
 	"math/cmplx"
 	"math/rand"
 	"sort"
+	"time"
 
 	"github.com/cpmech/gosl/fun/fftw"
 )
@@ -92,6 +93,7 @@ func runExperiment(x []complex128, n int,
 	var filterNoise float64 = 0
 	var filterNoiseEst float64 = 0
 
+	fmt.Printf("FILTER %+v\n\n FILTEREST %+v\n\n\n", filter.freq[n/2], filterEst.freq[n/2])
 	for i := 0; i < 10; i++ {
 		filterNoise = math.Max(filterNoise,
 			math.Max(cmplx.Abs(filter.freq[n/2+i]),
@@ -120,7 +122,6 @@ func runExperiment(x []complex128, n int,
 			fmt.Printf("Error on outerLoop: %+v\n", err)
 			return
 		}
-		fmt.Printf("????ANS %+v:%+v\n\n", ans, repetitions)
 	}
 
 	numCandidates := len(ans)
@@ -142,7 +143,6 @@ func runExperiment(x []complex128, n int,
 
 	//nth.Element(listOfFloats(candidates[0:numCandidates]), numCandidates-k)
 	sort.Sort(listOfFloats(candidates[0:numCandidates]))
-	fmt.Printf("??? %+v\n", candidates)
 	for i := 0; i < k; i++ {
 		key := candidates[numCandidates-k+i][1]
 		ansLarge[(int)(key)] = ans[(int)(key)]
@@ -177,19 +177,19 @@ func runExperiment(x []complex128, n int,
 	//reset_timer();
 
 	var p *fftw.Plan1d
-
+	planTime := time.Now().UnixNano()
 	if FFTWOPT {
 		p = fftw.NewPlan1d(xtmp, FFTWFORWARD, FFTWMEASURE)
 	} else {
 		p = fftw.NewPlan1d(xtmp, FFTWFORWARD, FFTWESTIMATE)
 	}
 
-	//  fmt.Printf("Time to create FFTW plan: %+V\n", get_time());
-	// reset_timer();
+	fmt.Printf("Time to create FFTW plan: %+v\n", (float64)(planTime)*1e-9)
+	planTime = time.Now().UnixNano()
 	for i := 0; i < repetitions; i++ {
 		p.Execute()
 	}
-	//fmt.Printf("Time to run FFTW : %lf\n", get_time());
+	fmt.Printf("Time to run FFTW : %+v\n", (float64)(planTime)*1e-9)
 	// fftw_destroy_plan(p);
 	p.Free()
 	fmt.Printf("******************************************************************************\n\n")
@@ -284,7 +284,6 @@ func main() {
 
 	BcstLocPtr := flag.Float64("B", 2., "BcstLoc")
 	BcstEstPtr := flag.Float64("E", 0.2, "BcstEst")
-	BcstEst := *BcstEstPtr
 	combCstPtr := flag.Float64("M", 16., "combCst")
 
 	locLoopsPtr := flag.Int("l", 3, "locLoops")
@@ -311,6 +310,7 @@ func main() {
 	k := *kPtr
 	repetitions := *repetitionsPtr
 	BcstLoc := *BcstLocPtr
+	BcstEst := *BcstEstPtr
 
 	combCst := *combCstPtr
 	if combCst > 0 {
@@ -350,6 +350,7 @@ func main() {
 	}
 
 	BBLoc := (BcstLoc * math.Sqrt((float64)(n*k)/(math.Log2((float64)(n)))))
+	fmt.Printf("bcest,n,k, %+v:%+v:%+v\n\n\n\n", BcstEst, n, k)
 	BBEst := (BcstEst * math.Sqrt((float64)(n*k)/(math.Log2((float64)(n)))))
 
 	lobefracLoc := 0.5 / (BBLoc)
@@ -362,6 +363,7 @@ func main() {
 
 	BLoc := floorToPow2(BBLoc)
 	BThresh := 2 * k
+	fmt.Printf("BEST IS %+v\n", BBEst)
 	BEst := floorToPow2(BBEst)
 
 	wComb := floorToPow2(combCst * (float64)(n) / (float64)(BLoc))
@@ -401,7 +403,8 @@ func main() {
 	}
 	fmt.Printf("\n")
 
-	fftwDft(xF, true)
+	copy(x, xF)
+	fftwDft(x, true)
 
 	//ADDED NOISE
 	snrAchieved := AWGN(x, n, stdNoise)

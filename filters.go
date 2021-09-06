@@ -51,10 +51,12 @@ func makeMultipleT(x []complex128, w, n, b int) (Filter, error) {
 	}
 	g := make([]complex128, n)
 	h := make([]complex128, n)
-	copy(g, x[:w/2])
-	copy(g[:n-w/2], x)
+	copy(g, x[w/2:])
+	copy(g[n-w/2:], x[:w/2])
+
 	fftwDft(g, false)
 	s := complex(0, 0)
+
 	for i := 0; i < b; i++ {
 		s += g[i]
 	}

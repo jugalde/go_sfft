@@ -102,7 +102,7 @@ func radix(byt, size int, A, TEMP []int) {
 		COUNT[((A[i])>>(byt))&0xFF]++
 	}
 
-	for i := 0; i < 256; i++ {
+	for i := 1; i < 256; i++ {
 		COUNT[i] += COUNT[i-1]
 	}
 	for i := size - 1; i >= 0; i-- {
@@ -159,7 +159,6 @@ func binomialCdf(prob float64, n, needed int) float64 {
 		ans += choose * math.Pow(prob, (float64)(i)) * math.Pow((float64)(1-prob), (float64)(n-i))
 		choose = choose * (float64)(i) / (float64)(n-i+1)
 	}
-	fmt.Printf("BINOMIAL %+v:%+v:%+v:%+v\n", prob, n, needed, ans)
 
 	return ans
 }
@@ -193,7 +192,7 @@ func AWGN(x []complex128, n int, stdNoise float64) float64 {
 		v = rand.Float64()
 		gn = complex(stdNoise*math.Sqrt((float64)(-2)*math.Log(u)), 0) * cmplx.Exp(complex(2*math.Pi*v, 0)*complex(0, 1))
 
-		noisePower += -2 * math.Log(u)
+		noisePower += (float64)(-2) * math.Log(u)
 
 		x[h] += gn
 	}
@@ -205,7 +204,7 @@ func AWGN(x []complex128, n int, stdNoise float64) float64 {
 }
 
 func fftwDft(out []complex128, backwards bool) {
-	plan := fftw.NewPlan1d(out, backwards, false)
+	plan := fftw.NewPlan1d(out, backwards, true)
 	plan.Execute()
 	plan.Free()
 }

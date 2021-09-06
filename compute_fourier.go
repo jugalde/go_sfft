@@ -52,14 +52,14 @@ func innerLoopLocate(origx []complex128, n int, filter *Filter, num, B, a, ai, b
 
 	if TIMING {
 		pfT = time.Now().UnixNano() - DDD
-		fmt.Printf("Step 1.A (PERM + FILTER);---------------%+v\n\n", pfT)
+		fmt.Printf("Step 1.A (PERM + FILTER);---------------%+v\n", (float64)(pfT)*1e-9)
 		DDD = time.Now().UnixNano()
 	}
 
 	fftwDft(xSampt, false)
 
 	if TIMING {
-		fmt.Printf("Step 1.B (FFTW);---------------%+v\n\n", time.Now().UnixNano()-DDD)
+		fmt.Printf("Step 1.B (FFTW);---------------%+v\n", (float64)(time.Now().UnixNano()-DDD)*1e-9)
 		DDD = time.Now().UnixNano()
 	}
 
@@ -74,7 +74,7 @@ func innerLoopLocate(origx []complex128, n int, filter *Filter, num, B, a, ai, b
 
 	if TIMING {
 		bcT = time.Now().UnixNano() - DDD
-		fmt.Printf("Step 1.C (LARGEST BUCKS);---------------%+v\n\n", bcT)
+		fmt.Printf("Step 1.C (LARGEST BUCKS);---------------%+v\n", (float64)(bcT)*1e-9)
 		DDD = time.Now().UnixNano()
 	}
 	return nil
@@ -87,23 +87,22 @@ func innerLoopLocate(origx []complex128, n int, filter *Filter, num, B, a, ai, b
 */
 func innerLoopFilterRegular(J []int, n, num, B, a, ai, b, loopThreshold int,
 	score, hits []int, hitsFound int,
-	GT int64) error {
+	GT int64) (int, error) {
 	DDD := time.Now().UnixNano()
 
 	// Given the set of large samples, find the locations in [n] that map there
 	// and output them
 
-	fmt.Printf("HIT ME????\n")
 	for i := 0; i < num; i++ {
 		low := ((int)(math.Ceil((float64)(J[i])-(float64)(0.5)*(float64)(n)/(float64)(B))) + n) % n
 		high := ((int)(math.Ceil((float64)(J[i])+(float64)(0.5)*(float64)(n)/(float64)(B))) + n) % n
 		loc := timesmod(low, a, n)
 		for j := low; j != high; j = (j + 1) % n {
 			score[loc]++
-			fmt.Printf("LOC VS THRESH %+v:%+v\n\n", score[loc], loopThreshold)
+			fmt.Printf("LOC VS THRESH %+v:%+v\n", score[loc], loopThreshold)
 			if score[loc] == loopThreshold {
-				hitsFound++
 				hits[hitsFound] = loc
+				hitsFound++
 			}
 			loc = (loc + a) % n
 		}
@@ -111,11 +110,11 @@ func innerLoopFilterRegular(J []int, n, num, B, a, ai, b, loopThreshold int,
 
 	if TIMING {
 		GT = time.Now().UnixNano() - DDD
-		fmt.Printf("Step 1.D (GROUPING):----------------------------- %+v\n\n", time.Now().UnixNano()-DDD)
-		fmt.Printf("#####################################################################\n\n")
+		fmt.Printf("Step 1.D (GROUPING):----------------------------- %+v\n", (float64)(time.Now().UnixNano()-DDD)*1e-9)
+		fmt.Printf("#####################################################################\n")
 	}
 
-	return nil
+	return hitsFound, nil
 }
 
 func upperBound(array [][]int, target []int) int {
@@ -142,7 +141,7 @@ func upperBound(array [][]int, target []int) int {
 func innerLoopFilterComb(J []int, n, num, B, a, ai, b, loopThreshold int,
 	score, hits []int, hitsFound int,
 	GT int64,
-	CombApproved []int, numComb, wComb int) error {
+	CombApproved []int, numComb, wComb int) (int, error) {
 
 	DDD := time.Now().UnixNano()
 
@@ -185,11 +184,11 @@ func innerLoopFilterComb(J []int, n, num, B, a, ai, b, loopThreshold int,
 
 	if TIMING {
 		GT = time.Now().UnixNano() - DDD
-		fmt.Printf("Step 1.D (GROUPING):----------------------------- %+v\n\n", time.Now().UnixNano()-DDD)
-		fmt.Printf("#####################################################################\n\n")
+		fmt.Printf("Step 1.D (GROUPING):----------------------------- %+v\n", time.Now().UnixNano()-DDD)
+		fmt.Printf("#####################################################################\n")
 	}
 
-	return nil
+	return hitsFound, nil
 
 }
 
@@ -214,7 +213,6 @@ func estimateValues(hits []int, hitsFound int,
 	for a := 0; a < 2; a++ {
 		values[a] = make([]float64, loops)
 	}
-	fmt.Printf("?NAY HITS %+v\n", hitsFound)
 
 	for i := 0; i < hitsFound; i++ {
 		position := 0
@@ -313,7 +311,7 @@ func outerLoop(origx []complex128, n int, filter Filter, filterEst Filter, B2, n
 		}
 		numComb = last + 1
 
-		fmt.Printf("Comb:%d----->%d\n\n", num*combLoops, numComb)
+		fmt.Printf("Comb:%d----->%d\n", num*combLoops, numComb)
 	}
 
 	if !ALGORITHM1 {
@@ -352,19 +350,21 @@ func outerLoop(origx []complex128, n int, filter Filter, filterEst Filter, B2, n
 		}
 
 		J := make([]int, num)
-
-		if err := innerLoopLocate(origx, n, &curFilter, num, curB, a, ai, b, xSamp[i], J, pfT, bcT); err != nil {
+		err := innerLoopLocate(origx, n, &curFilter, num, curB, a, ai, b, xSamp[i], J, pfT, bcT)
+		if err != nil {
 			return nil, err
 		}
 
 		if performLocation {
 			if !WITHCOMB {
-				if err := innerLoopFilterRegular(J, n, num, curB, a, ai, b, loopThreshold, score, hits, hitsFound, gT); err != nil {
+				hitsFound, err = innerLoopFilterRegular(J, n, num, curB, a, ai, b, loopThreshold, score, hits, hitsFound, gT)
+				if err != nil {
 					return nil, err
 				}
 				continue
 			}
-			if err := innerLoopFilterComb(J, n, num, curB, a, ai, b, loopThreshold, score, hits, hitsFound, gT, combApproved, numComb, wComb); err != nil {
+			hitsFound, err = innerLoopFilterComb(J, n, num, curB, a, ai, b, loopThreshold, score, hits, hitsFound, gT, combApproved, numComb, wComb)
+			if err != nil {
 				return nil, err
 			}
 		}
@@ -393,13 +393,13 @@ func outerLoop(origx []complex128, n int, filter Filter, filterEst Filter, B2, n
 	DDD = time.Now().UnixNano()
 
 	if TIMING {
-		fmt.Printf("Total sFFT time: %+v\n", DDD)
+		fmt.Printf("Total sFFT time: %+v\n", (float64)(DDD)*1e-9)
 		fmt.Printf("Time distribution: scoretable  Comb __  perm+filter grouping estimation  stepB+C    other    total\n")
-		fmt.Printf("                     %+v %+v    %+v %+v   %+v %+v %+v %+v\n",
-			scoreT, combTime, pfAll, gAll, ET, bcAll, DDD-pfAll-gAll-ET-combTime-bcAll-scoreT, DDD)
+		fmt.Printf("                     %.6f %.6f    %.6f %.6f   %.6f %.6f %.6f %.6f\n",
+			float64(scoreT)*1e-9, float64(combTime)*1e-9, float64(pfAll)*1e-9, float64(gAll)*1e-9, float64(ET)*1e-9, float64(bcAll)*1e-9, float64(DDD-pfAll-gAll-ET-combTime-bcAll-scoreT)*1e-9, float64(DDD))
 		tott := (DDD) / 100
-		fmt.Printf("                        %+v    %+v       %+v    %+v      %+v    %+v    %+v   %+v\n",
-			scoreT/tott, combTime/tott, pfAll/tott, gAll/tott, ET/tott, bcAll/tott, (DDD-pfAll-gAll-ET-combTime-bcAll-scoreT)/tott, (DDD)/tott)
+		fmt.Printf("                        %.6f%%    %.6f%%       %.6f%%    %.6f%%      %.6f%%    %.6f%%    %.6f%%   %.6f%%\n",
+			(float64)(scoreT)/(float64)(tott), (float64)(combTime)/(float64)(tott), (float64)(pfAll)/(float64)(tott), (float64)(gAll)/(float64)(tott), (float64)(ET)/(float64)(tott), (float64)(bcAll)/(float64)(tott), (float64)(DDD-pfAll-gAll-ET-combTime-bcAll-scoreT)/(float64)(tott), (float64)(DDD)/(float64)(tott))
 
 		//printf("LOC/EST loops: perm+filter grouping total\n");
 		//printf("Location:         %lf %lf %lf\n", PF_LOC, G_LOC, PF_LOC + G_LOC);
