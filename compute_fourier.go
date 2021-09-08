@@ -99,7 +99,7 @@ func innerLoopFilterRegular(J []int, n, num, B, a, ai, b, loopThreshold int,
 		loc := timesmod(low, a, n)
 		for j := low; j != high; j = (j + 1) % n {
 			score[loc]++
-			fmt.Printf("LOC VS THRESH %+v:%+v\n", score[loc], loopThreshold)
+			//fmt.Printf("LOC VS THRESH %+v:%+v\n", score[loc], loopThreshold)
 			if score[loc] == loopThreshold {
 				hits[hitsFound] = loc
 				hitsFound++
@@ -214,6 +214,7 @@ func estimateValues(hits []int, hitsFound int,
 		values[a] = make([]float64, loops)
 	}
 
+	//fmt.Printf("HITS FOUND ARE %+v\n\n\n", hitsFound)
 	for i := 0; i < hitsFound; i++ {
 		position := 0
 
@@ -310,8 +311,9 @@ func outerLoop(origx []complex128, n int, filter Filter, filterEst Filter, B2, n
 			}
 		}
 		numComb = last + 1
-
-		fmt.Printf("Comb:%d----->%d\n", num*combLoops, numComb)
+		if VERBOSE {
+			fmt.Printf("Comb:%d----->%d\n", num*combLoops, numComb)
+		}
 	}
 
 	if !ALGORITHM1 {
@@ -377,7 +379,9 @@ func outerLoop(origx []complex128, n int, filter Filter, filterEst Filter, B2, n
 			gAll += gT
 		}
 	}
-	fmt.Printf("Number of candidates: %+v\n", hitsFound)
+	if VERBOSE {
+		fmt.Printf("Number of candidates: %+v\n", hitsFound)
+	}
 
 	// END INNER LOOPS
 

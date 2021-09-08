@@ -4,3 +4,5 @@ github.com/keegancsmith/nth v0.0.0-20160926112203-ee21de2f07b8 h1:QCdRsV8WNLoLAU
 github.com/keegancsmith/nth v0.0.0-20160926112203-ee21de2f07b8/go.mod h1:GGie0rcBbRSciSNcfYjdzMR0jL66DbnsHDOhwIJ4L7g=
 github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12 h1:dd7vnTDfjtwCETZDrRe+GPYNLA1jBtbZeyfyE8eZCyk=
 github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12/go.mod h1:i/KKcxEWEO8Yyl11DYafRPKOPVYTrhxiTRigjtEEXZU=
+github.com/sbinet/go-gnuplot v0.0.0-20130514120836-9167d8eb1ac4 h1:DjPYuV8FWDg57bkdJ2DQUB6PMQJUapXdJ1uCvPC7XT0=
+github.com/sbinet/go-gnuplot v0.0.0-20130514120836-9167d8eb1ac4/go.mod h1:cBjaN6xLFdcYFeCkvNXnUCPPeHA23BR6Yg6liSwsLjE=
